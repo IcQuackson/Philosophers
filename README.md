@@ -1,6 +1,6 @@
-# Philosophers__
-__
-Philosophers__
+# Philosophers
+
+Philosophers\
 I never thought philosophy would be so deadly__
 Summary:__
 In this project, you will learn the basics of threading a process.__
