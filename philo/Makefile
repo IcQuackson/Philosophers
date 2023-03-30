@@ -1,6 +1,6 @@
 # Compiler settings
 CC = cc
-CFLAGS = -Wall -Wextra -Werror -g# -fsanitize=address
+CFLAGS = -Wall -Wextra -Werror -g -pthread# -fsanitize=address
 
 # Directories
 SRCDIR = ./src
@@ -13,7 +13,7 @@ OBJS = $(SRCS:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 
 # Targets
 NAME = philo
-ARGS = 5 1 1 1 1
+ARGS = 5 1 1000 1 5
 
 all: 	$(NAME)
 
