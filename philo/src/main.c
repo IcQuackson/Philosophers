@@ -3,253 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: joao-per <joao-per@student.42.fr>          +#+  +:+       +#+        */
+/*   By: pedgonca <pedgonca@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/03/28 19:55:04 by quackson          #+#    #+#             */
-/*   Updated: 2023/04/18 15:27:41 by joao-per         ###   ########.fr       */
+/*   Created: 2023/04/19 12:08:04 by pedgonca          #+#    #+#             */
+/*   Updated: 2023/05/06 19:03:34 by pedgonca         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/philo.h"
-
-/* int	check_if_starved(t_info *info)
-{
-	int	i;
-
-	i = 0;
-	while (i < info->num_philos)
-	{
-		pthread_mutex_lock(&info->philo_list[i].times_eaten_mutex);
-		if (info->philo_list[i].times_eaten == info->num_times_to_eat)
-			i++;
-		pthread_mutex_unlock(&info->philo_list[i].times_eaten_mutex);
-		else
-			break ;
-	}
-	return (i == info->num_philos);
-} */
-
-int	philo_finished(t_info *info)
-{
-	int	i;
-	int	n;
-
-	if (info->num_times_to_eat == -1)
-		return (0);
-	n = 0;
-	i = 0;
-	while (i < info->num_philos)
-	{
-		pthread_mutex_lock(&info->philo_list[i].mutex);
-		if (info->philo_list[i].is_done)
-			n++;
-		pthread_mutex_unlock(&info->philo_list[i].mutex);
-		i++;
-	}
-	return (n == info->num_philos);
-}
-
-void	check_if_dead(t_info *info, t_philo *philo_list)
-{
-	int				i;
-	int				n;
-
-	while (1)
-	{
-		i = -1;
-		n = 0;
-		while (++i < info->num_philos && !info->stop_condition)
-		{
-			pthread_mutex_lock(&philo_list[i].mutex);
-			if (philo_list[i].times_eaten == info->num_times_to_eat)
-				n++;
-			else if ((int)(get_timestamp() - philo_list[i].last_time_eaten)
-				>= info->time_to_die)
-			{
-				print_msg(&philo_list[i], "died", DEAD);
-				//pthread_mutex_lock(&info->stop_cond_mutex);
-				info->stop_condition = 1;
-				//pthread_mutex_unlock(&info->stop_cond_mutex);
-			}
-			pthread_mutex_unlock(&philo_list[i].mutex);
-		}
-		if (info->stop_condition == 1 || n == info->num_philos)
-			return ;
-	}
-	printf("end\n");
-}
-
-/* void	*check_if_dead(void *ptr)
-{
-	unsigned long	start;
-	t_philo			*philo;
-	t_info			*info;
-
-	philo = (t_philo *) ptr;
-	info = philo->info;
-	while (1)
-	{
-		pthread_mutex_lock(&philo->mutex);
-		start = philo->last_time_eaten;
-		if ((int)(get_timestamp() - start) >= philo->time_to_die)
-		{
-			pthread_mutex_lock(&info->stop_cond_mutex);
-			if (info->stop_condition == 0)
-				print_msg(philo, "died");
-			info->stop_condition = 1;
-			pthread_mutex_unlock(&info->stop_cond_mutex);
-			pthread_mutex_unlock(&philo->mutex);
-			return (NULL);
-		}
-		pthread_mutex_unlock(&philo->mutex);
-	}
-	return (NULL);
-} */
-
-int	error(const char *msg, t_info *info)
-{
-	while (*msg)
-		write(1, msg++, 1);
-	destroy(info);
-	return (0);
-}
-
-/* int	philo_eat(t_philo *philo)
-{
-	int	result;
-
-	result = 1;
-	pthread_mutex_lock(&philo->mutex);
-	pthread_mutex_lock(philo->l_mutex);
-	result = print_msg(philo, "has taken a fork 1");
-	pthread_mutex_lock(philo->r_mutex);
-	result = print_msg(philo, "has taken a fork 2");
-	result = print_msg(philo, "is eating");
-	//printf("%d result = %d\n", philo->id, result);
-	condition_usleep(philo->time_to_eat, philo);
-	philo->last_time_eaten = get_timestamp();
-	philo->times_eaten++;
-	pthread_mutex_unlock(philo->r_mutex);
-	pthread_mutex_unlock(philo->l_mutex);
-	pthread_mutex_unlock(&philo->mutex);
-	return (result);
-} */
-
-int pseudo_random_range(int min, int max, int philo_id)
-{
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    unsigned long long seed = tv.tv_usec * (philo_id + 1);
-
-    return (seed % (max - min + 1)) + min;
-}
-
-void random_usleep(int min_time, int max_time, int philo_id)
-{
-    int sleep_time = pseudo_random_range(min_time, max_time, philo_id);
-    usleep(sleep_time);
-}
-
-int philo_eat(t_philo *philo)
-{
-	int result;
-
-	result = 1;
-	
-	// If the philosopher has an odd index
-	if (philo->id % 2 != 0)
-    {
-        pthread_mutex_lock(philo->l_mutex);
-        result = print_msg(philo, "has taken a fork", ALIVE);
-        pthread_mutex_lock(philo->r_mutex);
-        result = print_msg(philo, "has taken a fork", ALIVE);
-    }
-    // If the philosopher has an even index
-    else
-    {
-        pthread_mutex_lock(philo->r_mutex);
-        result = print_msg(philo, "has taken a fork", ALIVE);
-        pthread_mutex_lock(philo->l_mutex);
-        result = print_msg(philo, "has taken a fork", ALIVE);
-    }
-    pthread_mutex_lock(&philo->mutex);
-    result = print_msg(philo, "is eating", ALIVE);
-    philo->last_time_eaten = get_timestamp();
-    philo->times_eaten++;
-    pthread_mutex_unlock(&philo->mutex);
-    condition_usleep(philo->time_to_eat, philo);
-    pthread_mutex_unlock(philo->l_mutex);
-    pthread_mutex_unlock(philo->r_mutex);
-	usleep(500);
-	//random_usleep(500, 1000, philo->id);
-
-	return (result);
-}
-
-void	ft_usleep(int ms)
-{
-	long int	time;
-
-	time = get_timestamp();
-	while (get_timestamp() - time < ms)
-		usleep(ms / 10);
-}
-
-void	*philo_routine(void *ptr)
-{
-	t_philo			*philo;
-
-	philo = (t_philo *) ptr;
-	//printf("%lld %d %s\n", get_timestamp() - philo->start_time, philo->id, "iniciou");
-	while (philo->times_eaten != philo->num_times_to_eat)
-	{
-		/* if (philo->id % 2)
-			ft_usleep(philo->time_to_eat / 10); */
-		if (philo_eat(philo) == 0)
-		{
-			//printf("FAIL\n");
-			break ;
-		}
-		print_msg(philo, "is sleeping", ALIVE);
-		condition_usleep(philo->time_to_sleep, philo);
-		print_msg(philo, "is thinking", ALIVE);
-	}
-	//printf("%d END!\n", philo->id);
-	return (NULL);
-}
-
-void	*meal_check_routine(void *ptr)
-{
-	t_info	*info;
-	int		i;
-
-	info = (t_info *) ptr;
-	while (1)
-	{
-		i = 0;
-		while (i < info->num_philos)
-		{
-			pthread_mutex_lock(&info->philo_list[i].mutex);
-			if (info->num_times_to_eat == info->philo_list[i].times_eaten)
-				i++;
-			else
-			{
-				pthread_mutex_unlock(&info->philo_list[i].mutex);
-				break ;
-			}
-			pthread_mutex_unlock(&info->philo_list[i].mutex);
-		}
-		if (i == info->num_philos)
-		{
-			/* pthread_mutex_lock(&info->stop_cond_mutex);
-			info->stop_condition = 1;
-			pthread_mutex_unlock(&info->stop_cond_mutex); */
-			break ;
-		}
-	}
-	return (NULL);
-}
-
 
 int	main(int argc, char **argv)
 {
@@ -269,8 +30,42 @@ int	main(int argc, char **argv)
 		destroy(info);
 	if (!init_philos(info) || !init_threads(info))
 		destroy(info);
-	/* if (info->stop_condition == 1)
-		pthread_mutex_unlock(&info->print); */
 	destroy(info);
 	return (0);
+}
+
+void	*ft_calloc(size_t nelem, size_t elsize)
+{
+	void	*p;
+
+	p = malloc(nelem * elsize);
+	if (p != NULL)
+		memset(p, 0, nelem * elsize);
+	return (p);
+}
+
+int	ft_atoi(const char *nptr)
+{
+	int	n;
+	int	sign;
+
+	n = 0;
+	sign = 1;
+	while ((*nptr >= 9 && *nptr <= 13) || *nptr == ' ')
+		nptr++;
+	if (!(*nptr == '-' || *nptr == '+' || (*nptr >= '0' && *nptr <= '9')))
+		return (0);
+	if (*nptr == '-' || *nptr == '+')
+	{
+		if (*nptr == '-')
+			sign = -1;
+		nptr++;
+	}
+	while (*nptr >= '0' && *nptr <= '9')
+	{
+		n *= 10;
+		n += *nptr - '0';
+		nptr++;
+	}
+	return (n * sign);
 }

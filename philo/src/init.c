@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   init.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: joao-per <joao-per@student.42.fr>          +#+  +:+       +#+        */
+/*   By: pedgonca <pedgonca@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/10/26 16:28:25 by pedgonca          #+#    #+#             */
-/*   Updated: 2023/04/18 12:58:16 by joao-per         ###   ########.fr       */
+/*   Created: 2023/04/19 12:09:34 by pedgonca          #+#    #+#             */
+/*   Updated: 2023/05/06 20:06:35 by pedgonca         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@ t_info	*init_info(int argc, char **argv)
 {
 	t_info	*info;
 
-	info = malloc(sizeof(t_info));
+	info = ft_calloc(1, sizeof(t_info));
 	if (!info)
 		return (NULL);
 	info->num_philos = ft_atoi(argv[1]);
@@ -24,7 +24,6 @@ t_info	*init_info(int argc, char **argv)
 	info->time_to_eat = ft_atoi(argv[3]);
 	info->time_to_sleep = ft_atoi(argv[4]);
 	info->num_times_to_eat = -1;
-	info->stop_condition = 0;
 	if (argc == 6)
 		info->num_times_to_eat = ft_atoi(argv[5]);
 	if (info->num_philos > 0 && info->time_to_die > 0 && info->time_to_eat > 0
@@ -38,6 +37,7 @@ t_info	*init_info(int argc, char **argv)
 		}
 		return (info);
 	}
+	free(info);
 	return (NULL);
 }
 
@@ -66,44 +66,16 @@ int	init_philos(t_info *info)
 	i = -1;
 	while (++i < info->num_philos)
 	{
-		if (pthread_mutex_init(&philo_list[i].mutex, NULL))
-			return (0);
+		pthread_mutex_init(&philo_list[i].mutex, NULL);
 		philo_list[i].info = info;
 		philo_list[i].id = i + 1;
 		philo_list[i].times_eaten = 0;
-		philo_list[i].is_done = 0;
-		philo_list[i].num_philos = info->num_philos;
-		philo_list[i].time_to_die = info->time_to_die;
-		philo_list[i].time_to_eat = info->time_to_eat;
-		philo_list[i].time_to_sleep = info->time_to_sleep;
-		philo_list[i].num_times_to_eat = info->num_times_to_eat;
-		/* philo_list[i].l_mutex = &info->forks[i];
-		philo_list[i].r_mutex = &info->forks[(i + 1) % info->num_philos]; */
-		if (info->num_philos % 2 == 0)
+		philo_list[i].l_mutex = &info->forks[i];
+		philo_list[i].r_mutex = &info->forks[(i + 1) % info->num_philos];
+		if (i + 1 == info->num_philos)
 		{
-			if (i % 2 == 0)
-			{
-				philo_list[i].l_mutex = &info->forks[i];
-				philo_list[i].r_mutex = &info->forks[(i + 1) % info->num_philos];
-			}
-			else
-			{
-				philo_list[i].l_mutex = &info->forks[(i + 1) % info->num_philos];
-				philo_list[i].r_mutex = &info->forks[i];
-			}
-		}
-		else
-		{
-			if (i + 1 != info->num_philos)
-			{
-				philo_list[i].l_mutex = &info->forks[i];
-				philo_list[i].r_mutex = &info->forks[(i + 1) % info->num_philos];
-			}
-			else
-			{
-				philo_list[i].l_mutex = &info->forks[(i + 1) % info->num_philos];
-				philo_list[i].r_mutex = &info->forks[i];
-			}
+			philo_list[i].r_mutex = &info->forks[i];
+			philo_list[i].l_mutex = &info->forks[(i + 1) % info->num_philos];
 		}
 	}
 	return (1);
@@ -126,14 +98,12 @@ int	init_threads(t_info *info)
 	t_philo		*philo_list;
 
 	philo_list = info->philo_list;
-
 	i = -1;
 	info->start_time = get_timestamp();
 	while (++i < info->num_philos)
 	{
 		info->philo_list[i].start_time = info->start_time;
 		info->philo_list[i].last_time_eaten = info->start_time;
-		//printf("created: %d\n", i);
 		if (pthread_create(&philo_list[i].thread, NULL, philo_routine,
 				&philo_list[i]))
 		{
@@ -142,38 +112,11 @@ int	init_threads(t_info *info)
 		}
 		usleep(100);
 	}
-	i = 0;
+	i = -1;
 	check_if_dead(info, info->philo_list);
-	printf("--------------------------------------------------------------------\n");
 	if (info->stop_condition == 1)
 		pthread_mutex_unlock(&info->print_mutex);
 	while (++i < info->num_philos)
 		pthread_join(info->philo_list[i].thread, NULL);
 	return (1);
-}
-
-int	ft_atoi(const char *nptr)
-{
-	int	n;
-	int	sign;
-
-	n = 0;
-	sign = 1;
-	while ((*nptr >= 9 && *nptr <= 13) || *nptr == ' ')
-		nptr++;
-	if (!(*nptr == '-' || *nptr == '+' || (*nptr >= '0' && *nptr <= '9')))
-		return (0);
-	if (*nptr == '-' || *nptr == '+')
-	{
-		if (*nptr == '-')
-			sign = -1;
-		nptr++;
-	}
-	while (*nptr >= '0' && *nptr <= '9')
-	{
-		n *= 10;
-		n += *nptr - '0';
-		nptr++;
-	}
-	return (n * sign);
 }

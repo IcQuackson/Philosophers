@@ -3,25 +3,18 @@
 /*                                                        :::      ::::::::   */
 /*   utils.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: joao-per <joao-per@student.42.fr>          +#+  +:+       +#+        */
+/*   By: pedgonca <pedgonca@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/04/06 16:49:16 by quackson          #+#    #+#             */
-/*   Updated: 2023/04/18 11:33:45 by joao-per         ###   ########.fr       */
+/*   Created: 2023/04/19 12:08:14 by pedgonca          #+#    #+#             */
+/*   Updated: 2023/05/06 19:46:50 by pedgonca         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/philo.h"
 
-void	condition_usleep(int msec, t_philo *philo)
+void	ft_usleep(int msec)
 {
-	int	stop;
-
-	(void) philo;
-	pthread_mutex_lock(&philo->info->stop_cond_mutex);
-	stop = philo->info->stop_condition == 1;
-	pthread_mutex_unlock(&philo->info->stop_cond_mutex);
-	if (stop == 0)
-		usleep(msec * 1000);
+	usleep(msec * 1000);
 }
 
 int	print_msg(t_philo *philo, const char *msg, int flag)
@@ -40,14 +33,6 @@ int	print_msg(t_philo *philo, const char *msg, int flag)
 	if (flag == ALIVE)
 		pthread_mutex_unlock(&philo->info->print_mutex);
 	return (result);
-}
-
-void	print_dead(t_philo *philo)
-{
-	unsigned long	timestamp;
-
-	timestamp = get_timestamp() - philo->start_time;
-	printf("%ld %d %s\n", timestamp, philo->id, "died");
 }
 
 long long	get_timestamp(void)
@@ -75,9 +60,14 @@ void	destroy(t_info *info)
 		free(info->forks);
 	}
 	free(info->philo_list);
-	pthread_mutex_destroy(&info->stop_cond_mutex);
 	pthread_mutex_destroy(&info->print_mutex);
-	pthread_mutex_destroy(&info->meal_mutex);
-	//pthread_mutex_destroy(&info->print);
 	free(info);
+}
+
+int	error(const char *msg, t_info *info)
+{
+	while (*msg)
+		write(1, msg++, 1);
+	destroy(info);
+	return (0);
 }

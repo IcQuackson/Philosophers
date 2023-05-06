@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   philo.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: quackson <quackson@student.42.fr>          +#+  +:+       +#+        */
+/*   By: pedgonca <pedgonca@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/28 19:16:38 by quackson          #+#    #+#             */
-/*   Updated: 2023/04/17 11:22:51 by quackson         ###   ########.fr       */
+/*   Updated: 2023/05/06 20:16:19 by pedgonca         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,12 +17,13 @@
 # include <unistd.h>
 # include <sys/time.h>
 # include <stdlib.h>
-
-# include <assert.h>
+# include <string.h>
 # include <stdio.h>
 
 # define DEAD 1
 # define ALIVE 0
+
+//#define malloc(x) NULL
 
 typedef struct s_info	t_info;
 typedef struct s_philo	t_philo;
@@ -36,14 +37,8 @@ typedef struct s_philo
 	pthread_t		thread;
 	int				id;
 	int				times_eaten;
-	int				is_done;
 	long long		last_time_eaten;
 	long long		start_time;
-	int				num_philos;
-	int				time_to_die;
-	int				time_to_eat;
-	int				time_to_sleep;
-	int				num_times_to_eat;
 	t_philo			*philo_list;
 }	t_philo;
 
@@ -75,7 +70,6 @@ void			destroy(t_info *info);
 long long		get_timestamp(void);
 int				print_msg(t_philo *philo, const char *msg, int flag);
 void			print_dead(t_philo *philo);
-//void			*check_if_dead(void *ptr);
 void			check_if_dead(t_info *info, t_philo *philo_list);
 void			destroy(t_info *info);
 int				philo_eat(t_philo *philo);
@@ -85,5 +79,7 @@ int				init_forks(t_info *info);
 int				init_philos(t_info *info);
 int				init_threads(t_info *info);
 int				init_mutexes(t_info *info);
-void			condition_usleep(int usec, t_philo *philo);
+void			ft_usleep(int usec);
+void			*ft_calloc(size_t nelem, size_t elsize);
+
 #endif

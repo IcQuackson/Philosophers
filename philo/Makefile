@@ -1,27 +1,26 @@
 # Compiler settings
 CC = cc
-CFLAGS = -Wall -Wextra -Werror -g -pthread 
+CFLAGS = -Wall -Wextra -Werror -g -pthread -fsanitize=thread
 
 # Directories
 SRCDIR = ./src
 OBJDIR = ./objs
 
 # Source Files
-
-SRCS = $(SRCDIR)/main.c $(SRCDIR)/init.c $(SRCDIR)/utils.c
+SRCS = $(SRCDIR)/main.c $(SRCDIR)/init.c $(SRCDIR)/utils.c $(SRCDIR)/philo_actions.c
 OBJS = $(SRCS:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 
 # Targets
 NAME = philo
 #      n die eat slp [n_eat]
-ARGS =  5 800 200 200
+ARGS = 1 470 200 200
 
 all: 	$(NAME)
 
 bonus:	all
 
 clean:
-		rm -f $(OBJDIR)/*.o
+		rm -rf $(OBJDIR)
 
 fclean:	clean
 		rm -f $(NAME)
@@ -44,7 +43,7 @@ $(NAME): $(OBJS)
 		$(CC) $(OBJS) $(CFLAGS) -o $(NAME)
 
 %.o: %.c
-	$(CC) -Wall -Wextra -Werror -O3 -c $< -o $@
+	$(CC) -Wall -Wextra -Werror -c $< -o $@
 
 $(OBJDIR):
 	mkdir -p $(OBJDIR)
